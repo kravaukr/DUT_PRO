@@ -1,0 +1,8 @@
+curl --location 'http://127.0.0.1:8076/api/users/postman'
+
+curl --location 'http://127.0.0.1:8076/api/users' \
+--header 'Content-Type: application/json' \
+--data '{
+    "login": "postman",
+    "password": "postman-password"
+}'

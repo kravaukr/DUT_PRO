@@ -11,6 +11,8 @@ import org.example.service.UserServiceImpl;
 import org.slf4j.Logger;
 
 
+import java.util.UUID;
+
 import static org.example.helper.ConfigHelper.port;
 import static org.example.helper.ConfigHelper.profile;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -20,7 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 // crud operation ++
 // config ++
 // log
-// hikari ++
+// hikari
 // kafka
 // DbClient ++
 // DataRepo ++
@@ -42,7 +44,8 @@ public class App extends HttpApp {
         DataRepo dataRepo = new DataRepo(dbClient);
 
         UserServiceImpl userService = new UserServiceImpl(dataRepo);
-
+        System.out.println("[test] success log");
+        System.out.println("[test] failed log");
         route = concat(
                 new UserRoute(userService).route,
                 new StatusRoute().route
@@ -53,8 +56,11 @@ public class App extends HttpApp {
 
 
     public static void main(String[] args) throws Exception {
-        log.info("up...");
-        log.info("active profile: {}, http port: {}", profile, port);
+//        UUID cid = UUID.randomUUID();
+//        log.info("[56da880d-6507-46a1-ab7d-595d5e6fe35c] up...");
+//        log.debug("[56da880d-6507-46a1-ab7d-595d5e6fe35c]up...");
+//        log.error("[56da880d-6507-46a1-ab7d-595d5e6fe35c]up...");
+//        log.info("active profile: {}, http port: {}", profile, port);
         new App().startServer("0.0.0.0", port);
     }
 
