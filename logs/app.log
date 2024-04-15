@@ -1,0 +1,8 @@
+[10:57:38.586] [main] [INFO] [org.example.App                     ] up...
+[10:57:38.852] [main] [INFO] [org.example.App                     ] active profile: local, http port: 8076
+[10:57:39.634] [App-akka.actor.default-dispatcher-4] [INFO] [akka.event.slf4j.Slf4jLogger        ] Slf4jLogger started
+[10:57:40.216] [App-akka.actor.default-dispatcher-4] [INFO] [akka.actor.ActorSystemImpl          ] Server online at http://0:0:0:0:0:0:0:0:8076/
+[10:58:38.429] [main] [INFO] [org.example.App                     ] up...
+[10:58:38.753] [main] [INFO] [org.example.App                     ] active profile: local, http port: 8076
+[10:58:49.198] [App-akka.actor.default-dispatcher-5] [INFO] [akka.event.slf4j.Slf4jLogger        ] Slf4jLogger started
+[10:58:50.815] [App-akka.actor.default-dispatcher-6] [INFO] [akka.actor.ActorSystemImpl          ] Server online at http://0:0:0:0:0:0:0:0:8076/

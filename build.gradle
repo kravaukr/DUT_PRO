@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.mariadb.jdbc:mariadb-java-client:2.7.4'
+
+    implementation('ch.qos.logback:logback-classic:1.4.6')
+    implementation 'org.apache.commons:commons-csv:1.10.0'
+
+    implementation 'com.typesafe.akka:akka-stream_2.12:2.8.4'
+    implementation 'com.typesafe.akka:akka-http_2.12:10.4.0'
+    implementation 'com.typesafe.akka:akka-http-jackson_2.12:10.4.0'
+    implementation 'com.typesafe.akka:akka-slf4j_2.12:2.8.4'
+
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}

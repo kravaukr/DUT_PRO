@@ -1,0 +1,74 @@
+<configuration>
+
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+  <!--***************************************************************************************************************-->
+
+  <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/app.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/app-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxHistory>7</maxHistory>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>100MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+    </rollingPolicy>
+    <encoder>
+      <charset>utf-8</charset>
+      <pattern>[%d{HH:mm:ss.SSS}] [%thread] [%-4level] [%-36logger{36}] %msg%n%xException</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+    <destination>${LOGSTASH_HOSTS}</destination>
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <pattern>
+          <pattern>
+            {
+            "service": "dut-pro"
+            }
+          </pattern>
+        </pattern>
+        <timestamp/>
+        <loggerName/>
+        <threadName/>
+        <logLevel/>
+        <message/>
+        <stackTrace>
+          <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+            <maxDepthPerThrowable>30</maxDepthPerThrowable>
+            <maxLength>2048</maxLength>
+            <shortenedClassNameLength>20</shortenedClassNameLength>
+            <exclude>^sun\.reflect\..*\.invoke</exclude>
+            <exclude>^net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+            <evaluator class="myorg.MyCustomEvaluator"/>
+            <rootCauseFirst>true</rootCauseFirst>
+          </throwableConverter>
+        </stackTrace>
+      </providers>
+    </encoder>
+  </appender>
+
+  <!--***************************************************************************************************************-->
+
+  <appender name="ASYNC_APP_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>3000</queueSize>
+    <discardingThreshold>0</discardingThreshold>
+    <appender-ref ref="APP_FILE"/>
+  </appender>
+
+  <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>3000</queueSize>
+    <discardingThreshold>0</discardingThreshold>
+    <appender-ref ref="LOGSTASH"/>
+  </appender>
+
+  <!--***************************************************************************************************************-->
+
+  <root level="INFO">
+    <appender-ref ref="ASYNC_APP_FILE"/>
+    <appender-ref ref="ASYNC_LOGSTASH"/>
+  </root>
+
+</configuration>
