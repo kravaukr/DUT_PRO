@@ -7,6 +7,7 @@ import org.example.repository.DataRepo;
 import org.example.repository.DbClient;
 import org.example.route.StatusRoute;
 import org.example.route.UserRoute;
+import org.example.service.KafkaConsumerService;
 import org.example.service.UserServiceImpl;
 import org.slf4j.Logger;
 
@@ -41,11 +42,16 @@ public class App extends HttpApp {
 
         DbClient dbClient = new DbClient();
 
+        String bootstrapServers = "localhost:9092";
+        String groupId = "best";
+        String topic = "dutTopic";
+
         DataRepo dataRepo = new DataRepo(dbClient);
 
+        KafkaConsumerService consumerService = new KafkaConsumerService(bootstrapServers, groupId, topic, dataRepo);
+        consumerService.consumeMessages();
+
         UserServiceImpl userService = new UserServiceImpl(dataRepo);
-        System.out.println("[test] success log");
-        System.out.println("[test] failed log");
         route = concat(
                 new UserRoute(userService).route,
                 new StatusRoute().route

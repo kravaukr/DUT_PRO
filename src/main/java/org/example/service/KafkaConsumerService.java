@@ -1,42 +1,64 @@
 package org.example.service;
 
+import org.example.model.User;
+import org.example.repository.DataRepo;
 import org.slf4j.Logger;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.example.helper.ConfigHelper.appConfig;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class KafkaConsumer {
+public class KafkaConsumerService {
 
-    private static final Logger log = getLogger(KafkaConsumer.class);
+    private static final Logger log = getLogger(KafkaConsumerService.class);
 
-    private static final String URL = appConfig.getString("client.db.contact.points");
-    private static final String USER = appConfig.getString("client.db.user");
-    private static final String PASSWORD = appConfig.getString("client.db.password");
+    private final KafkaConsumer<String, String> consumer;
 
-    public Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+    private DataRepo dataRepo;
+
+    public KafkaConsumerService(String bootstrapServers, String groupId, String topic, DataRepo dataRepo) {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", bootstrapServers);
+        props.put("group.id", groupId);
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+        this.consumer = new KafkaConsumer<>(props);
+        this.consumer.subscribe(Collections.singletonList(topic));
+        this.dataRepo = dataRepo;
     }
 
-    //    private final HikariDataSource dictDS;
-//
-//    public DbClient() {
-//        log.info("Init dict DB client...");
-//        final HikariConfig dictConfig = new HikariConfig();
-//        dictConfig.setJdbcUrl(URL);
-//        dictConfig.setUsername(USER);
-//        dictConfig.setPassword(PASSWORD);
-//        dictConfig.addDataSourceProperty("cachePrepStmts", "true");
-//        dictConfig.addDataSourceProperty("prepStmtCacheSize", "250");
-//        dictDS = new HikariDataSource(dictConfig);
-//        log.info("Init dict DB client success");
-//    }
+    public void consumeMessages() {
+        ObjectMapper objectMapper = new ObjectMapper();
 
-//    public Connection getConnection() throws SQLException {
-//        return dictDS.getConnection();
-//    }
+        while (true) {
+            // Отримуємо повідомлення з Kafka
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                log.info("Received record from Kafka: " + record.value());
 
+                try {
+                    // Десеріалізуємо JSON у об'єкт User
+                    User user = objectMapper.readValue(record.value(), User.class);
+
+                    // Створюємо користувача в базі даних
+                    boolean result = dataRepo.createUser(user);
+                    if (result) {
+                        log.info("Successfully created user: " + user);
+                    } else {
+                        log.error("Failed to create user: " + user);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

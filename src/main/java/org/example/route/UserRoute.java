@@ -1,20 +1,31 @@
 package org.example.route;
 
 import akka.http.javadsl.marshallers.jackson.Jackson;
+import akka.http.javadsl.model.StatusCode;
 import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.PathMatchers;
 import akka.http.javadsl.server.Route;
 import akka.http.javadsl.server.directives.RouteAdapter;
+import org.example.App;
 import org.example.model.User;
 import org.example.service.UserService;
 import akka.http.javadsl.server.Route;
+import org.slf4j.Logger;
 
 import java.util.Optional;
+import java.util.UUID;
 
+import static akka.http.javadsl.marshallers.jackson.Jackson.marshaller;
+import static akka.http.javadsl.model.StatusCodes.ACCEPTED;
+import static akka.http.javadsl.model.StatusCodes.NOT_FOUND;
+import static akka.http.javadsl.model.headers.RawHeader.create;
 import static akka.http.javadsl.server.Directives.*;
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class UserRoute extends AllDirectives {
+
+    private static final Logger log = getLogger(AllDirectives.class);
 
     public final Route route;
 
@@ -35,9 +46,10 @@ public class UserRoute extends AllDirectives {
                                 path(PathMatchers.segment(), login ->
                                         concat(
                                                 get(() -> {
+                                                    UUID cid = UUID.randomUUID();
+                                                    log.info("[{}] OK, request accepted, login: {}", cid, login);
                                                     Optional<User> user = userService.getUser(login);
-                                                    return user.map(u -> complete(StatusCodes.OK, u, Jackson.marshaller()))
-                                                            .orElseGet(() -> (RouteAdapter) complete(StatusCodes.NOT_FOUND));
+                                                    return user.map(u -> completeWithOk(u,cid)).orElseGet(() -> completeWithError(NOT_FOUND, cid));
                                                 }),
                                                 delete(() -> {
                                                     userService.deleteUser(login);
@@ -55,40 +67,17 @@ public class UserRoute extends AllDirectives {
                 )
         );
     }
+    private Route completeWithOk(final User user, UUID cid) {
 
+        log.info("[{}] OK, request processed successfully, code: {}, body: {}", cid, ACCEPTED.intValue(), user);
 
-//                concat(
-//                pathPrefix(segment("api").slash("users") () ->
-//                        concat(
-//                                post(() ->
-//                                        entity(Jackson.unmarshaller(User.class), user -> {
-//                                            User newUser = userService.createUser(user);
-//                                            return complete(StatusCodes.CREATED, newUser, Jackson.marshaller());
-//                                        })
-//                                ),
-//                                get(() ->
-//                                        path(PathMatchers.segment(), login -> {
-//                                            Optional<User> user = userService.getUser(login);
-//                                            return user.map(u -> complete(StatusCodes.OK, u, Jackson.marshaller()))
-//                                                    .orElseGet(() -> (RouteAdapter) complete(StatusCodes.NOT_FOUND));
-//                                        })
-//                                ),
-//                                put(() ->
-//                                        entity(Jackson.unmarshaller(User.class), user -> {
-//                                            User updatedUser = userService.updateUser(user);
-//                                            return complete(StatusCodes.OK, updatedUser, Jackson.marshaller());
-//                                        })
-//                                ),
-//                                delete(() ->
-//                                        path(PathMatchers.segment(), login -> {
-//                                            userService.deleteUser(login);
-//                                            return complete(StatusCodes.NO_CONTENT);
-//                                        })
-//                                )
-//                        )
-//                )
-//        );
-//    }
+        return complete(StatusCodes.OK, user, Jackson.marshaller());
+    }
 
+    private Route completeWithError(final StatusCode statusCode, UUID cid) {
 
+        log.info("[{}] FAIL, request processed with error, code: {}, body: {}", cid, statusCode.intValue(), statusCode.defaultMessage());
+
+        return complete(StatusCodes.NOT_FOUND);
+    }
 }
